@@ -4,18 +4,17 @@
       id: number;
       title: string;
     }>;
-    currentTab: any;
+    currentTab?: any;
+    getCurrentTabValue?: (v: string)=> void;
   };
-  let { tabs, currentTab = $bindable() }: Props = $props();
+  let { tabs, currentTab, getCurrentTabValue }: Props = $props();
 
-  let activeTab = $state(currentTab.viewType);
+  let activeTab = $state(currentTab);
 
-  const updateTab = (selectedTab:any) => {
+  const updateTab = (selectedTab: any) => {
     activeTab = selectedTab.title;
-    currentTab = {
-      ...currentTab,
-      viewType: selectedTab.title,
-    };
+    currentTab = selectedTab.title;
+    getCurrentTabValue && getCurrentTabValue(selectedTab.title);
   };
 </script>
 

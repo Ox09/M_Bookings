@@ -3,28 +3,23 @@
   import AddEvent from "../lib/AddEvent.svelte";
   import Tabs from "../lib/Tabs.svelte";
   import type { Events, OptionType } from "../utils/types";
-  import { blur, fade } from "svelte/transition";
+  import { fade } from "svelte/transition";
   import { events } from "../store/store.svelte";
   import edit from "../assets/edit.svg";
   import add from "../assets/add.svg";
   import remove from "../assets/remove.svg";
-  import {
-    deleteSlide,
-    slideList,
-  } from "../custom_trasnsitions-animations/custom_trasnsitions-animations";
+  import { deleteSlide } from "../custom_trasnsitions-animations/custom_trasnsitions-animations";
 
   type ActiveTabInterface =
-    | { viewType: "Upcoming"; eventsGroupedAs: "monthly",color: "#006BFF" }
-    | { viewType: "Pending"; eventsGroupedAs: "monthly", color: "#5deb6f" }
-    | { viewType: "New"; eventsGroupedAs: "monthly",color: "#219B9D" }
-    | { viewType: "Cancelled"; eventsGroupedAs: "monthly",color: "#FF4545" };
-
-  let { ...others } = $props();
+    | { viewType: "Upcoming"; eventsGroupedAs: "monthly"; color: "#006BFF" }
+    | { viewType: "Pending"; eventsGroupedAs: "monthly"; color: "#5deb6f" }
+    | { viewType: "New"; eventsGroupedAs: "monthly"; color: "#219B9D" }
+    | { viewType: "Cancelled"; eventsGroupedAs: "monthly"; color: "#FF4545" };
 
   let activeTab: ActiveTabInterface = $state({
     viewType: "Upcoming",
     eventsGroupedAs: "monthly",
-    color:"#006BFF"
+    color: "#006BFF",
   });
   let activeModal: string | null = $state(null);
   let tempEventHolder: Events | undefined = $state({
@@ -71,6 +66,17 @@
     return sortedArray;
   });
 
+  function getCurrentTabValue(currentTab: string) {
+    const validTabs = ["Upcoming", "Pending", "New", "Cancelled"] as const;
+
+    if (validTabs.includes(currentTab as (typeof validTabs)[number])) {
+      activeTab = {
+        ...activeTab,
+        viewType: currentTab,
+      };
+    }
+  }
+
   function addNewEvent() {
     activeModal = "addEvent";
     tempEventHolder = {
@@ -100,9 +106,6 @@
     events.splice(findId, 1);
   }
 
-  {
-    $inspect(tempEventHolder, activeTab, events);
-  }
 </script>
 
 {#snippet taskList(currentTab: string)}
@@ -116,7 +119,11 @@
             <div class="month-group">
               <h3>{month}</h3>
               {#each sortedTasks[type][month] as task, index (task.id)}
-                <div class="task-item" style={`background-color:${task.background}`} out:deleteSlide={{ duration: 150 }}>
+                <div
+                  class="task-item"
+                  style={`background-color:${task.background}`}
+                  out:deleteSlide={{ duration: 150 }}
+                >
                   <div class="date-section">
                     <p class="day">
                       {dayjs(task.date || task.createdOn?.[0]).date()}
@@ -151,7 +158,10 @@
 
 <!-- Edit task -->
 {#snippet editTaskBtn(taskDetails: Events)}
-  <div class="edit-button" style={`background-color: ${taskDetails.background}`}>
+  <div
+    class="edit-button"
+    style={`background-color: ${taskDetails.background}`}
+  >
     <button>Edit</button>
     <div class="edit-options">
       <button
@@ -174,13 +184,13 @@
   </div>
 {/snippet}
 
-<section class="bookings-page" {...others}>
+<section class="bookings-page">
   <header>
     <h1>Bookings</h1>
     <p>See your scheduled events from your calendar events links.</p>
   </header>
   <div class="tabs-wrapper">
-    <Tabs {tabs} bind:currentTab={activeTab} />
+    <Tabs {tabs} {getCurrentTabValue} currentTab={activeTab.viewType} />
     <div class="add-event-wrapper">
       <button class="add-event-btn" onclick={addNewEvent}>Add Event</button>
     </div>
@@ -199,7 +209,6 @@
 
 <style>
   .bookings-page {
-    width: 100%;
     padding: 1rem;
     flex: 1;
     display: flex;

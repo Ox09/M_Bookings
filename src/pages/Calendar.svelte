@@ -31,8 +31,6 @@
     | { viewType: "Month"; eventsGroupedAs: "daily" }
     | { viewType: "Year"; eventsGroupedAs: "daily" };
 
-  let { ...others } = $props();
-
   let tabs = [
     { id: 0, title: "Week" },
     { id: 1, title: "Month" },
@@ -184,32 +182,54 @@
     );
   });
 
-  function nextMonth() {
-    if (currentMonthIndex === 11) {
-      currentMonthIndex = 0;
-      currentYear++;
-    } else {
-      currentMonthIndex++;
+  function getCurrentTabValue(currentTab: string) {
+    if (currentTab === "Week") {
+      activeTab = {
+        eventsGroupedAs: "hourly",
+        viewType: "Week",
+      };
+    } else if (currentTab === "Month" || currentTab === "Year") {
+      activeTab = {
+        eventsGroupedAs: "daily",
+        viewType: currentTab,
+      };
     }
-    currentMonth = dayjs(`${currentYear}-${currentMonthIndex + 1}`).format(
-      "MMMM"
-    );
-
-    activeWeek = 1;
   }
 
-  function prevMonth() {
-    if (currentMonthIndex === 0) {
-      currentMonthIndex = 11;
+  function updateNextDate() {
+    if (activeTab.viewType === "Year") {
+      currentYear++;
+    } else {
+      if (currentMonthIndex === 11) {
+        currentMonthIndex = 0;
+        currentYear++;
+      } else {
+        currentMonthIndex++;
+      }
+      currentMonth = dayjs(`${currentYear}-${currentMonthIndex + 1}`).format(
+        "MMMM"
+      );
+
+      activeWeek = 1;
+    }
+  }
+
+  function updatePreviousDate() {
+    if (activeTab.viewType === "Year") {
       currentYear--;
     } else {
-      currentMonthIndex--;
-    }
-    currentMonth = dayjs(`${currentYear}-${currentMonthIndex + 1}`).format(
-      "MMMM"
-    );
+      if (currentMonthIndex === 0) {
+        currentMonthIndex = 11;
+        currentYear--;
+      } else {
+        currentMonthIndex--;
+      }
+      currentMonth = dayjs(`${currentYear}-${currentMonthIndex + 1}`).format(
+        "MMMM"
+      );
 
-    activeWeek = 1;
+      activeWeek = 1;
+    }
   }
 
   function formatTime(time: string[]) {
@@ -220,7 +240,7 @@
     const dayIndex = String(fullYear[currentMonth]?.[activeWeek]?.[day]);
 
     if (dayIndex)
-      return `${currentYear}-${currentMonthIndex + 1}-${String(
+      return `${currentYear}-${String(months.indexOf(currentMonth) + 1).padStart(2, "0")}-${String(
         fullYear[currentMonth]?.[activeWeek]?.[day]
       ).padStart(2, "0")}#${modifiedHour}`;
   }
@@ -234,6 +254,7 @@
   function handleEventsDialog(key: string | undefined, day: string) {
     const dayIndex = fullYear[currentMonth][activeWeek]?.[day];
 
+    if (key?.includes("undefined")) return;
     if (dayIndex && key) {
       activeDay = key;
       dialogRef?.showModal();
@@ -255,7 +276,7 @@
     const [st, period] = formattedTime.split(" ");
 
     if (activeDay !== null) {
-      activeModal = "addvent";
+      activeModal = "addEvent";
       tempEventsHolder = {
         id: timestamp,
         task: "",
@@ -276,7 +297,9 @@
       dialogRef?.close();
     }
   }
-
+  {
+    $inspect(activeTab, groupedEvents[activeTab.eventsGroupedAs]);
+  }
 </script>
 
 <!-- Events Dialog -->
@@ -456,20 +479,22 @@
         transition:fly={{ y: 200, duration: 300, easing: quintOut }}
       >
         <div class="selector-container">
-          <div class="months-column">
-            <h3>Months</h3>
-            <div class="scrollable-list months">
-              {#each months as month, index}
-                <button
-                  class="selector-item"
-                  class:active={currentMonth === month}
-                  onclick={() => (currentMonth = month)}
-                >
-                  {month}
-                </button>
-              {/each}
+          {#if activeTab.viewType !== "Year"}
+            <div class="months-column">
+              <h3>Months</h3>
+              <div class="scrollable-list months">
+                {#each months as month, index}
+                  <button
+                    class="selector-item"
+                    class:active={currentMonth === month}
+                    onclick={() => (currentMonth = month)}
+                  >
+                    {month}
+                  </button>
+                {/each}
+              </div>
             </div>
-          </div>
+          {/if}
 
           <div class="years-column">
             <h3>Years</h3>
@@ -488,7 +513,7 @@
         </div>
 
         <div class="selected-info">
-          <p>Selected: {months[currentMonthIndex]} {currentYear}</p>
+          <p>Selected: {currentMonth} {currentYear}</p>
           <div class="actions">
             <button
               class="btn-cancel"
@@ -505,7 +530,7 @@
 
 <!-- Calendar weekly view -->
 {#snippet weekView()}
-  <table class="week-view">
+  <table class="week-view" in:fade={{ duration: 150 }}>
     <thead>
       <tr class="thead">
         <th class="top-left-navigation-cell">
@@ -562,7 +587,7 @@
 
 <!-- Calendar monthly view -->
 {#snippet monthView()}
-  <table class="month-view">
+  <table class="month-view" in:fade={{ duration: 150 }}>
     <thead>
       <tr class="thead">
         {#each days as day}
@@ -576,7 +601,7 @@
       {#each Object.keys(fullYear[currentMonth]) as week, i}
         <tr class="week-row">
           {#each days as day}
-            {@const key = `${currentYear}-${currentMonthIndex + 1}-${fullYear[currentMonth][week][day]}`}
+            {@const key = `${currentYear}-${String(months.indexOf(currentMonth) + 1).padStart(2, "0")}-${String(fullYear[currentMonth][week][day]).padStart(2, "0")}`}
             <td class="cell" onclick={() => handleEventsDialog(key, day)}>
               {#if fullYear[currentMonth][week].hasOwnProperty(day)}
                 {#if groupedEvents.daily[key]?.length > 0}
@@ -595,7 +620,7 @@
 
 <!-- Calendar yearly view -->
 {#snippet yearView()}
-  <div class="full-year-view">
+  <div class="full-year-view" in:fade={{ duration: 150 }}>
     {#each Object.keys(fullYear) as month}
       <div class="month-container">
         <div class="month-name">
@@ -645,14 +670,14 @@
   </div>
 {/snippet}
 
-<section class="calender-wrapper" {...others}>
+<section class="calender-wrapper">
   <header class="header">
     <h2>Reservations</h2>
     <p>Manage and track your reservations</p>
   </header>
   <div class="tabs-wrapper">
     {@render activeMonthAndYear()}
-    <Tabs {tabs} bind:currentTab={activeTab} />
+    <Tabs {tabs} {getCurrentTabValue} currentTab={activeTab.viewType} />
     <button
       type="button"
       class="gotoTodayBtn"
@@ -661,8 +686,8 @@
       }}>Today</button
     >
     <div class="navigations-wrapper">
-      <button type="button" onclick={prevMonth}>&#129104</button>
-      <button type="button" onclick={nextMonth}>&#129106</button>
+      <button type="button" onclick={updatePreviousDate}>&#129104</button>
+      <button type="button" onclick={updateNextDate}>&#129106</button>
     </div>
   </div>
   <div class="calender">
@@ -685,6 +710,7 @@
     flex-direction: column;
     overflow: hidden;
     padding-inline: 16px;
+    /* padding-bottom: 1em; */
 
     .header {
       background-color: #fff;
@@ -1167,7 +1193,7 @@
     background-color: white;
     border-radius: 12px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    width: 600px;
+    width: 300px;
     max-height: 80vh;
     display: flex;
     flex-direction: column;
@@ -1182,7 +1208,7 @@
 
   .months-column,
   .years-column {
-    width: 50%;
+    /* width: 50%;  */
     padding: 20px;
     position: relative;
   }

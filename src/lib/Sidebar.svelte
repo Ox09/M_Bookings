@@ -15,7 +15,7 @@
   ];
 
   interface Props {
-    activeRoute?: Link;
+    activeRoute: string | "Bookings" | "Calendar";
   }
   interface Link {
     logo: string;
@@ -27,13 +27,13 @@
   let activeLink: Link = $state(links[0]);
 
   $effect(() => {
-    activeRoute = links[0];
+    activeRoute = "Bookings";
   });
 
   const handleActiveLink = (e: Event, link: Link) => {
     e.preventDefault();
     activeLink = link;
-    activeRoute = link;
+    activeRoute = link.title;
   };
 </script>
 

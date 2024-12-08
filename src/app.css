@@ -10,5 +10,26 @@ main {
     display: flex;
     gap: 15px;
     max-width: 1440px;
+
+    .link-to-github {
+      position: fixed;
+      left: 20px;
+      bottom: 20px;
+      text-decoration: none;
+      color: darkgray;
+
+      &:hover {
+        span {
+          border-bottom: 1px solid cadetblue;
+          color: cadetblue;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  main {
+    padding-bottom: 4.1rem;
   }
 }

@@ -47,8 +47,15 @@
     { text: "New", color: "#219B9D" },
     { text: "Cancelled", color: "#FF4545" },
   ]);
-  let colors: bgColor[] = ["#D8EAFE", "#FFF8D8", "#DFFFD6", "#ffb7b77d"];
-  let eventType = $state(options[0]);
+  let colors: bgColor[] = [
+    "#D8EAFE",
+    "#FFF8D8",
+    "#DFFFD6",
+    "#ffb7b77d",
+    "#ffffff",
+    "#d8d8d8",
+    "#decdfb",
+  ];
   let timeFormat = $state({
     startTime: {
       checked: false,
@@ -95,7 +102,7 @@
     }
   });
 
-  const handleEnter=(e: KeyboardEvent, target: keyof Events)=> {
+  const handleEnter = (e: KeyboardEvent, target: keyof Events) => {
     if (e.key === "Enter") {
       e.preventDefault();
       if (target === "people" || target === "places") {
@@ -105,13 +112,13 @@
         emptyField[target] = "";
       }
     }
-  }
+  };
 
-  const removeItem=(index: number, target: Target)=> {
+  const removeItem = (index: number, target: Target) => {
     taskDetails[target].splice(index, 1);
-  }
+  };
 
-  const handleAddEvent=(e:SubmitEvent)=> {
+  const handleAddEvent = (e: SubmitEvent) => {
     e.preventDefault();
     if (taskDetails.date === "") {
       taskDetails.date = dayjs(new Date()).format("YYYY-MM-DD");
@@ -139,9 +146,9 @@
       background: "#ffb7b77d",
     };
     activeModal = null;
-  }
+  };
 
-  const handleTimeInput=(e: Event)=> {
+  const handleTimeInput = (e: Event) => {
     const target = e.target as HTMLInputElement | null;
     if (target) {
       const transformMinToNum = Number(target.min);
@@ -154,9 +161,9 @@
         target.value = transformMaxToNum.toString().padStart(2, "0");
       }
     }
-  }
+  };
 
-  const handleMeridian=(e: Event, type: "startTime" | "endTime")=> {
+  const handleMeridian = (e: Event, type: "startTime" | "endTime") => {
     const eventTarget = e.target as HTMLInputElement | null;
     if (eventTarget?.checked) {
       timeFormat[type].meridien = "PM";
@@ -169,9 +176,9 @@
       `${timeFormat[type].hour}:${timeFormat[type].minute}`,
       `${timeFormat[type].meridien}`,
     ];
-  }
+  };
 
-  const updateTimeInput=(e: Event, type: "startTime" | "endTime")=> {
+  const updateTimeInput = (e: Event, type: "startTime" | "endTime") => {
     const eventTarget = e.target as HTMLInputElement;
     const { name, value } = eventTarget;
     if (name === "hour") {
@@ -184,21 +191,20 @@
       `${timeFormat[type].hour}:${timeFormat[type].minute}`,
       `${timeFormat[type].meridien}`,
     ];
-  }
+  };
 
-  const handleNewUpdate=()=> {
+  const handleNewUpdate = () => {
     const findIndex = events.findIndex((item) => item.id === taskDetails.id);
     events.splice(findIndex, 1, taskDetails);
     closeModal();
-    console.log(taskDetails);
-  }
+  };
 
-  const closeModal=()=> {
+  const closeModal = () => {
     if (activeModal !== null) {
       activeModal = null;
     }
     dialogRef?.close();
-  }
+  };
 </script>
 
 <!-- Lists e.g. places, people names -->
@@ -266,16 +272,14 @@
 
 <!-- Task types -->
 {#snippet taskType()}
-  <div class="radio-group">
+  <div class="task-type-group">
     {#each options as option}
       <input
         type="radio"
-        bind:group={eventType}
-        value={option}
+        value={option.text}
         name={"eventType"}
         id={option.text}
-        onchange={() => (taskDetails.eventType = eventType)}
-        checked={taskDetails.eventType.text === option.text}
+        bind:group={taskDetails.eventType.text}
       />
       <label
         class="radio-label"
@@ -640,32 +644,32 @@
     cursor: pointer;
   }
 
-  .radio-group {
+  .task-type-group {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 3px;
     margin-bottom: 10px;
     margin-left: 28px;
-  }
 
-  .radio-label {
-    color: #666;
-    cursor: pointer;
-    font-size: 14px;
-    background-color: #fff;
-    border: 1.5px solid #e1e1e1;
-    border-radius: 4px;
-    padding: 2px 3px;
-  }
+    .radio-label {
+      color: #666;
+      cursor: pointer;
+      font-size: 14px;
+      background-color: #fff;
+      border: 1.5px solid #e1e1e1;
+      border-radius: 4px;
+      padding: 2px 3px;
+    }
 
-  input[type="radio"] {
-    display: none;
-  }
+    input[type="radio"] {
+      display: none;
+    }
 
-  input[type="radio"]:checked + .radio-label {
-    background-color: var(--set-bg);
-    color: #e1e1e1;
-    border: 1px solid #737574;
+    input[type="radio"]:checked + .radio-label {
+      background-color: var(--set-bg);
+      color: #e1e1e1;
+      border: 1px solid #737574;
+    }
   }
 
   @media (max-width: 400px) {
@@ -680,12 +684,14 @@
     align-items: center;
     margin-left: 26px;
     margin-block: 10px;
-  }
 
-  .theme-container input[type="radio"] {
-    display: none;
+    input[type="radio"] {
+      display: none;
+    }
+    input[type="radio"]:checked + .color-circle {
+      border-color: #5c636aa1;
+    }
   }
-
   .color-circle {
     display: inline-block;
     width: 20px;
@@ -694,9 +700,5 @@
     border: 3px solid transparent;
     cursor: pointer;
     transition: border-color 0.2s ease-in-out;
-  }
-
-  .theme-container input[type="radio"]:checked + .color-circle {
-    border-color: #5c636aa1;
   }
 </style>
